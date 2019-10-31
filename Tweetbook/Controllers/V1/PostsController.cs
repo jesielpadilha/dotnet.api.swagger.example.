@@ -1,27 +1,70 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Tweetbook.Contract.V1;
+using Tweetbook.Contract.V1.Requests;
+using Tweetbook.Contract.V1.Responses;
 using Tweetbook.Domain;
+using Tweetbook.Services;
 
 namespace Tweetbook.Controllers.V1
 {
     public class PostsController : Controller
     {
-        private List<Post> _posts;
-
-        public PostsController()
+        private IPostService _postService;
+        public PostsController(IPostService postService)
         {
-            _posts = new List<Post>();
-            for(var i = 0; i < 5; i++)
-            {
-                _posts.Add(new Post { Id = Guid.NewGuid().ToString() });
-            }
+            _postService = postService;
         }
 
-        [HttpGet("api/v1/posts")]
+        [HttpGet(ApiRoutes.Posts.GetAll)]
         public IActionResult GetAll()
         {
-            return Ok(_posts);
+            return Ok(_postService.GetPosts());
+        }
+
+        [HttpPut(ApiRoutes.Posts.Update)]
+        public IActionResult Update([FromRoute] Guid postId, [FromBody] UpdatePostRequest request)
+        {
+            var post = new Post
+            {
+                Id = postId,
+                Name = request.Name
+            };
+
+            var updated = _postService.UpdatePost(post);
+            if (updated)
+                return Ok(post);
+
+            return NotFound();
+        }
+
+        [HttpGet(ApiRoutes.Posts.Get)]
+        public IActionResult Get([FromRoute] Guid postId)
+        {
+            var post = _postService.GetPostById(postId);
+            if (post == null)
+                return NotFound();
+
+            return Ok(post);
+        }
+
+        [HttpPost(ApiRoutes.Posts.Create)]
+        public IActionResult Create([FromBody] CreatePostRequest postRequest)
+        {
+            var post = new Post { Id = postRequest.Id };
+
+            if (post.Id != Guid.Empty)
+                post.Id = Guid.NewGuid();
+
+            _postService.GetPosts().Add(post);
+
+            var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
+            var locationUri = baseUrl + "/" + ApiRoutes.Posts.Get.Replace("{postId}", post.Id.ToString());
+
+            var response = new PostResponse { Id = post.Id };
+
+            //it returns a HTTP 201, indicating the new resource was successfully created. That action isn't necessary but is a good practice 
+            return Created(locationUri, post);
         }
     }
 }
