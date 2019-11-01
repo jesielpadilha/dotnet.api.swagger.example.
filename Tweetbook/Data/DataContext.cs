@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Tweetbook.Domain;
 
 namespace Tweetbook.Data
 {
@@ -8,5 +9,7 @@ namespace Tweetbook.Data
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
         }
+
+        public DbSet<Post> Posts { get; set; }
     }
 }

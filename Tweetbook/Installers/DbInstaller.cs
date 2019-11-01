@@ -14,7 +14,8 @@ namespace Tweetbook.Installers
             services.AddDbContext<DataContext>(options => options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
             services.AddDefaultIdentity<IdentityUser>().AddEntityFrameworkStores<DataContext>();
 
-            services.AddSingleton<IPostService, PostService>();
+            //services.AddScoped<IPostService, PostService>();
+            services.AddSingleton<IPostService, CosmosPostService>();
         }
     }
 }
