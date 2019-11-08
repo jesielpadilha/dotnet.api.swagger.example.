@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +8,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using System.Collections.Generic;
 using System.Text;
 using Tweetbook.Options;
+using Tweetbook.Services;
 
 namespace Tweetbook.Installers
 {
@@ -17,6 +19,8 @@ namespace Tweetbook.Installers
             var jwtSettings = new JwtSettings();
             configuration.Bind(nameof(jwtSettings), jwtSettings);
             services.AddSingleton(jwtSettings);
+
+            services.AddScoped<IIdentityService, IdentityService>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
@@ -39,7 +43,7 @@ namespace Tweetbook.Installers
                     ValidateLifetime = true
                 };
             });
-            
+
             services.AddSwaggerGen(x =>
             {
                 x.SwaggerDoc("v1", new Info { Title = "Tweetbook API", Version = "v1" });
@@ -49,8 +53,9 @@ namespace Tweetbook.Installers
                     {"Bearer", new string[0] }
                 };
 
-                x.AddSecurityDefinition("Bearer", new ApiKeyScheme {
-                    Description= "JWT Authorization header using the bearer scheme",
+                x.AddSecurityDefinition("Bearer", new ApiKeyScheme
+                {
+                    Description = "JWT Authorization header using the bearer scheme",
                     Name = "Authorization",
                     In = "header",
                     Type = "apiKey",
